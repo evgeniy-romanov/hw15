@@ -1,21 +1,22 @@
 # PAM
 
-Домашнее задание:
+## Домашнее задание:
 
-1. Запретить всем пользователям, кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников
-* дать конкретному пользователю права работать с докером и возможность рестартить докер сервис
+1. Запретить всем пользователям, кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников.
+2. дать конкретному пользователю права работать с докером и возможность рестартить докер сервис.
 
 
-Проверить выполнение дз:
+## Проверить выполнение дз:
 - в выходные должно пускать под admin1, под notadmin1 не пустит.
 
-- Пользователь dockerUser может выполнять команду ```sudo systemctl restart docker```, проверить, что докер перезапущен ``` systemctl status docker```
+- Пользователь dockerUser может выполнять команду ```sudo systemctl restart docker```, проверить, что докер перезапущен ``` systemctl status docker```.
 
 
 
-Описание работы.
-
-*Запретить всем пользователям, кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников*
+## Описание работы.
+____________________________________
+### 1. Запретить всем пользователям, кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников.
+____________________________________
 
 Реализовано через ```pam_script```.
 
@@ -25,7 +26,8 @@ yum install epel-release -y
 yum install pam_script -y
 ```
 Добавляем в ```/etc/pam.d/sshd``` соответствующую запись ```auth  required  pam_script.so```.
-Сам скрипт скопировали из текущей директории на vm и выдали права на выполнение
+
+Создаем скрипт, который будет запрещать всем пользователям кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников.
 ```
 [root@PAM ~]# nano pam_script
 
@@ -46,7 +48,7 @@ fi
 [root@PAM ~]# chmod +x pam_script
 [root@PAM ~]# cp /root/pam_script /etc/
 ```
-Создаём группу *admin*, создаём пользователя admin и делаем его администратором, задаём пароль.
+Создаём группу *admin*, создаём пользователя admin1 и делаем его администратором, задаём пароль.
 ```
 [root@PAM ~]# groupadd admin
 [root@PAM ~]# useradd -G admin admin1
@@ -107,7 +109,8 @@ Permission denied, please try again.
 ```
 Как видим пользователь notadmin1, не может подключиться в выходной день.
 ____________________________________
-*дать конкретному пользователю права работать с докером и возможность рестартить докер сервис*
+### 2. Дать конкретному пользователю права работать с докером и возможность рестартить докер сервис.
+____________________________________
 
 Создаём пользователя, задаём пароль. Группа ```docker``` создаётся в процессе установки docker'а, поэтому её отдельно не задаю.
 ```
@@ -140,7 +143,30 @@ This message shows that your installation appears to be working correctly.
 Authenticating as: dockerUser
 Password: 
 ==== AUTHENTICATION COMPLETE ===
+[dockerUser@PAM root]$ systemctl status docker
+● docker.service - Docker Application Container Engine
+   Loaded: loaded (/usr/lib/systemd/system/docker.service; disabled; vendor preset: disabled)
+   Active: active (running) since Mon 2022-07-25 16:22:43 UTC; 8s ago
+     Docs: https://docs.docker.com
+ Main PID: 4549 (dockerd)
+    Tasks: 7
+   Memory: 27.5M
+   CGroup: /system.slice/docker.service
+           └─4549 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/conta...
+
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.753771417Z" lev...pc
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.753782880Z" lev...pc
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.765692827Z" lev...2"
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.769133847Z" lev...."
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.861485979Z" lev...s"
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.894784299Z" lev...."
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.906732888Z" lev...17
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.906798180Z" lev...n"
+Jul 25 16:22:43 PAM systemd[1]: Started Docker Application Container Engine.
+Jul 25 16:22:43 PAM dockerd[4549]: time="2022-07-25T16:22:43.922244336Z" lev...k"
+Hint: Some lines were ellipsized, use -l to show in full.
 [dockerUser@PAM root]$ 
+
 ```
 Так же есть ещё стандартный способ, это добавить пользователя в sudoers, т.е. дать пользователю право выполнять команду от имени root. Здесь необходимо добавить пользователя в группу wheel командой ```usermod -aG wheel dockerUser```, после чего можно выполнять команды с приставкой sudo.
 
